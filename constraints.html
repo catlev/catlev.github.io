@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<head>
+    <title>Constraints</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+    <h1>Constraints</h1>
+    
+    <p>
+        Constraints are facts about a model that the runtime system ensures are
+        always true by preventing data that violates those constraints from
+        being committed.
+    </p>
+
+    <p>
+        Constraints are useful for two important reasons. They ensure that the
+        data upon which you are operating is well-formed for its target domain.
+        They also document how the data application is intended to operate, so
+        enabling teams of people to work on the data.
+    </p>
+
+    <h2>Uniqueness Constraint</h2>
+
+    <p>
+        The most basic constraint is the uniqueness constraint. This asserts 
+        that, for a particular entity type and set of attributes, there are no
+        two entities with the same field values.
+    </p>
+
+    <p>
+        Uniqueness is implied by identifying attributes and relationships, but
+        may be asserted separately as well.
+    </p>
+
+    <er-example title="single identifying attribute">
+        entity_type {
+            name: "A"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+        }
+    </er-example>
+
+    <er-example title="multiple identifying attributes">
+        entity_type {
+            name: "citizen"
+
+            attribute { name: "name" type: "string" identifying: "true" }
+            attribute { name: "dob" type: "date" identifying: "true" }
+            attribute { name: "address" type: "string" }
+        }
+    </er-example>
+
+    <er-example title="auxilliary uniqueness">
+        entity_type {
+            name: "tree_node"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+            attribute { name: "parent_id" type: "integer"}
+            attribute { name: "name" type: "string"}
+
+            unique {
+                attribute { name: "parent_id" }
+                attribute { name: "name" }
+            }
+        }
+    </er-example>
+
+    <h2>Existence Constraint</h2>
+
+    <p>
+        This asserts that, for a particular entity type <er-eqn>A</er-eqn> and 
+        entity type <er-eqn>B</er-eqn> and relationship <er-eqn>f</er-eqn>, for
+        every entity in <er-eqn>A</er-eqn> there exists a <er-eqn>B</er-eqn>
+        that is accessible by following <er-eqn>f</er-eqn>. This can be written
+        <er-eqn>f: A -> B</er-eqn>. In this case <er-eqn>A</er-eqn> is the
+        source entity and <er-eqn>B</er-eqn> is the target entity.
+    </p>
+
+    <p>
+        Existence is implied by describing a relationship of cardinality one 
+        (the default).
+    </p>
+
+    <er-example title="defining a relationship">
+        entity_type {
+            name: "A"
+
+            relationship { name: "f" type: "B" }
+        }
+
+        entity_type {
+            name: "B"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+        }
+    </er-example>
+
+    <p>
+        The logical-to-physical transformation elaborates these kinds of
+        relationships so that the attributes necessary to implement them exist.
+    </p>
+
+    <h2>Commutativity Constraint</h2>
+
+    <p>
+        This asserts that, for entity types <er-eqn>A</er-eqn> and
+        <er-eqn>B</er-eqn> and relationships <er-eqn>f: A -> B</er-eqn> and
+        <er-eqn>g: A -> B</er-eqn>, for every entity in <er-eqn>A</er-eqn>,
+        following <er-eqn>f</er-eqn> leads to the same <er-eqn>B</er-eqn> as
+        following <er-eqn>g</er-eqn>. In this case <er-eqn>A</er-eqn> is the
+        source entity type and <er-eqn>B</er-eqn> is the scope entity.
+    </p>
+
+    <p>
+        Typically, commutativity extends over more than two entity types. The
+        classic case is of four entity types that form a square.
+    </p>
+
+    <p>
+        Commutativity is described by scopes on relationships. A scope is 
+        written as an equation of two paths. The lhs is called the <i>riser</i>
+        and the rhs is called the <i>diagonal</i>. The diagonal starts at the
+        source entity and ends at the scope entity. The riser starts at the
+        target entity and ends at the scope entity.
+    </p>
+
+    <er-example title="comuting square">
+        entity_type {
+            name: "A"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+            relationship { name: "f_2" type: "B" }
+        }
+
+        entity_type {
+            name: "B"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+        }
+
+        entity_type {
+            name: "C"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+            relationship { name: "f_1" type: "A" }
+            relationship { name: "g_1" type: "D" scope: "g_2=f_1/f_2" }
+        }
+
+        entity_type {
+            name: "D"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+            relationship { name: "g_2" type: "B" identifying: "true" }
+        }
+    </er-example>
+
+    <p>
+        More than two relationships may be said to commute. This follows
+        straightforwardly from the definition given above.
+    </p>
+
+    <er-example title="commuting cube">
+        entity_type {
+            name: "A"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+            relationship { name: "f_2" type: "B" }
+        }
+
+        entity_type {
+            name: "B"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+        }
+
+        entity_type {
+            name: "C"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+            relationship { name: "f_1" type: "A" }
+            relationship { name: "g_1" type: "D" scope: "g_2=f_1/f_2&i=h_1/h_2" }
+            relationship { name: "h_1" type: "E" }
+        }
+
+        entity_type {
+            name: "D"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+            relationship { name: "g_2" type: "B" identifying: "true" }
+            relationship { name: "i" type: "F" identifying: "true" }
+        }
+
+        entity_type {
+            name: "E"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+
+            relationship { name: "h_2" type: "E" }
+        }
+
+        entity_type {
+            name: "F"
+
+            attribute { name: "id" type: "integer" identifying: "true" }
+        }
+    </er-example>
+
+    <h2>Pullback Constraint</h2>
+
+    <p>
+        This asserts that, for a commuting square of entities
+        <er-eqn>A</er-eqn>, <er-eqn>B</er-eqn>, <er-eqn>C</er-eqn> and
+        <er-eqn>D</er-eqn> and relationships <er-eqn>f_1: C -> A</er-eqn>,
+        <er-eqn>f_2: A -> B</er-eqn>, <er-eqn>g_1: C -> D</er-eqn> and
+        <er-eqn>g_2: D -> B</er-eqn>, for every pair of (<er-eqn>A</er-eqn>,
+        <er-eqn>D</er-eqn>) where (<er-eqn>f_2</er-eqn>, <er-eqn>g_2</er-eqn>)
+        respectively refer to the same <er-eqn>B</er-eqn>, there exists a
+        <er-eqn>C</er-eqn>.
+    </p>
+
+    <script src="example.js"></script>
+</body>
